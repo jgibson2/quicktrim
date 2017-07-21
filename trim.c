@@ -102,5 +102,4 @@ int trim_pe(struct fqrec* rec1, struct fqrec* rec2, unsigned int qual_cutoff, un
         }
         return 0;
     }
-    return 2;
 }
