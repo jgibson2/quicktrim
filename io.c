@@ -70,6 +70,7 @@ int writePairedRecords(struct fqrec* rec1, FILE* file1, struct fqrec* rec2, FILE
     /*
      * writes rec1 and rec2 to file1 and file2, respectively
      */
+    int m_res1 = 0, m_res2 = 0;
     #pragma omp parallel sections
     {
         #pragma omp section
@@ -77,7 +78,7 @@ int writePairedRecords(struct fqrec* rec1, FILE* file1, struct fqrec* rec2, FILE
             int res1 = writeRecord(rec1, file1);
             if(res1 > 0)
             {
-                return 1;
+                m_res1 = res1;
             }
         }
 
@@ -86,11 +87,11 @@ int writePairedRecords(struct fqrec* rec1, FILE* file1, struct fqrec* rec2, FILE
             int res2 = writeRecord(rec2, file2);
             if(res2 > 0)
             {
-                return 1;
+                m_res2 = res2;
             }
         }
     }
-    return 0;
+    return m_res1 + m_res2;
 }
 
 int init_file_data(unsigned long size, const char* filename, struct fqfiledata* data)
@@ -167,7 +168,7 @@ int getNextRecord(struct fqfiledata* data, struct fqrec* rec)
                     break;
             }
         }
-        else if(data->eof && data->current_offset == data->current_size - 1)
+        else if(data->eof && i == data->current_size - 1)
         {
             qual_end_offset = i+1;
         }
@@ -180,6 +181,7 @@ int getNextRecord(struct fqfiledata* data, struct fqrec* rec)
     }
     if(line < 4)
     {
+        allocatefqrec(data->buf, 0,0,0,0,0,0, rec);
         return 2;
     }
     data->current_offset = qual_end_offset + 1;

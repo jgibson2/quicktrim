@@ -61,12 +61,12 @@ int trim_pe(struct fqrec* rec1, struct fqrec* rec2, unsigned int qual_cutoff, un
             for (unsigned int i = rec1->seqLength - 1; i > 0; i--) {
                 if (rec1->seqLength < length_cutoff) {
                     rec1->seqLength = 0;
-                    return 1;
+                    break;
                 }
                 if (rec1->seqAndQualBuf[i + rec1->offset] - phred > qual_cutoff) {
                     if (hq_bases_rec1 >= in_a_row) {
                         rec1->seqLength += in_a_row;
-                        return 0;
+                        break;
                     }
                     hq_bases_rec1++;
                 } else if (hq_bases_rec1 > 0) {
@@ -82,12 +82,12 @@ int trim_pe(struct fqrec* rec1, struct fqrec* rec2, unsigned int qual_cutoff, un
             for (unsigned int i = rec2->seqLength - 1; i > 0; i--) {
                 if (rec2->seqLength < length_cutoff) {
                     rec2->seqLength = 0;
-                    return 1;
+                    break;
                 }
                 if (rec2->seqAndQualBuf[i + rec2->offset] - phred > qual_cutoff) {
                     if (hq_bases_rec2 >= in_a_row) {
                         rec2->seqLength += in_a_row;
-                        return 0;
+                        break;
                     }
                     hq_bases_rec2++;
                 } else if (hq_bases_rec2 > 0) {
@@ -96,10 +96,9 @@ int trim_pe(struct fqrec* rec1, struct fqrec* rec2, unsigned int qual_cutoff, un
                 rec2->seqLength--;
             }
         }
-
-        if (rec1->seqLength == 0 || rec2->seqLength == 0) {
-            return 1;
-        }
-        return 0;
     }
+    if (rec1->seqLength == 0 || rec2->seqLength == 0) {
+        return 1;
+    }
+    return 0;
 }

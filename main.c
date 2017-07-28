@@ -4,10 +4,19 @@
 #include <unistd.h>
 #include <ctype.h>
 
+void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsigned int length_cutoff,
+                         unsigned int in_a_row, unsigned int phred, char* input_file, char* output_base_name);
+void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsigned int length_cutoff,
+                         unsigned int in_a_row, unsigned int phred, char* forward_file, char* reverse_file,
+                         char* output_base_name);
+
 int main(int argc, char** argv) {
     unsigned long buf_size = 100000;
     unsigned int qual_cutoff = 30, length_cutoff = 20, in_a_row = 5, phred = 33;
-    char* input_file, forward_file, reverse_file, output_base_name;
+    char* input_file;
+    char* forward_file;
+    char* reverse_file;
+    char* output_base_name;
     int paired_end = 0;
 
     char* optstring = "q:l:r:p:i:o:1:2:";
@@ -33,17 +42,25 @@ int main(int argc, char** argv) {
                 phred = strtoul(optarg, &end, 10);
                 break;
             case 'i':
-                input_file = optarg;
+                input_file = (char*)calloc(strlen(optarg) + 10, sizeof(char));
+                strncpy(input_file, optarg, strlen(optarg));
+                input_file[strlen(optarg)] = '\0';
                 break;
             case 'o':
-                output_base_name = optarg;
+                output_base_name = (char*)calloc(strlen(optarg) + 50, sizeof(char));
+                strncpy(output_base_name, optarg, strlen(optarg));
+                output_base_name[strlen(optarg)] = '\0';
                 break;
             case '1':
-                forward_file = optarg;
+                forward_file = (char*)calloc(strlen(optarg) + 10, sizeof(char));
+                strncpy(forward_file, optarg, strlen(optarg));
+                forward_file[strlen(optarg)] = '\0';
                 paired_end = 1;
                 break;
             case '2':
-                reverse_file = optarg;
+                reverse_file = (char*)calloc(strlen(optarg) + 10, sizeof(char));
+                strncpy(reverse_file, optarg, strlen(optarg));
+                reverse_file[strlen(optarg)] = '\0';
                 paired_end = 1;
                 break;
             case '?':
@@ -71,6 +88,8 @@ int main(int argc, char** argv) {
                             output_base_name);
     }
 
+
+    return 0;
 
 }
 
@@ -103,12 +122,12 @@ void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
         err = trim_se(&rec, qual_cutoff, length_cutoff, in_a_row, phred);
         if(err) {
             printf("Error trimming: %d.\n", err);
-            return;
+            break;
         }
         err = writeRecord(&rec, out);
         if(err) {
             printf("Error writing: %d.\n", err);
-            return;
+            break;
         }
     }
     printf("Done reading file or error reading.\n");
@@ -122,6 +141,9 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
                          unsigned int in_a_row, unsigned int phred, char* forward_file, char* reverse_file,
                          char* output_base_name)
 {
+    char* output_base_name_copy = (char*)calloc(strlen(output_base_name) + 50, sizeof(char));
+    strncpy(output_base_name_copy, output_base_name, strlen(output_base_name));
+    output_base_name[strlen(output_base_name)] = '\0';
     struct fqfiledata forward_data;
     int res = init_file_data(buf_size, forward_file, &forward_data);
     if(res == 1) {
@@ -140,7 +162,7 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
     } else if (res == 2) {
         printf("Error opening file.\n");
     }
-    FILE* reverse_out = fopen(strcat(output_base_name, ".reverse.fastq"), "wb");
+    FILE* reverse_out = fopen(strcat(output_base_name_copy, ".reverse.fastq"), "wb");
     struct fqrec rec1;
     rec1.nameLength = 0;
     rec1.seqLength = 0;
@@ -152,27 +174,36 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
     rec2.offset = 0;
 
     int err = 0;
+    int readerr = 0;
+
+    allocatefqrec(forward_data.buf, 0,0,0,0,0,0, &rec1);
+    allocatefqrec(reverse_data.buf, 0,0,0,0,0,0, &rec2);
+
 
     while(1) {
         err = getNextRecord(&forward_data, &rec1);
         if(err) {
-            printf("Error getting record: %d.\n", err);
-            break;
+            printf("Error getting fwd record: %d.\n", err);
+            readerr = 1;
         }
         err = getNextRecord(&reverse_data, &rec2);
         if(err) {
-            printf("Error getting record: %d.\n", err);
+            printf("Error getting rev record: %d.\n", err);
+            readerr = 1;
+        }
+        if(readerr)
+        {
             break;
         }
         err = trim_pe(&rec1, &rec2, qual_cutoff, length_cutoff, in_a_row, phred);
         if(err) {
             printf("Error trimming: %d.\n", err);
-            return;
+            break;
         }
         err = writePairedRecords(&rec1, forward_out, &rec2, reverse_out);
         if(err) {
             printf("Error writing: %d.\n", err);
-            return;
+            break;
         }
     }
     printf("Done reading files or error reading.\n");

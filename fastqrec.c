@@ -1,6 +1,7 @@
 //
 // Created by john on 6/29/2017.
 //
+#include <stdio.h>
 #include "fastqrec.h"
 
 int allocatefqrec(char* bytes, unsigned long name_start_offset, unsigned long name_end_offset,
