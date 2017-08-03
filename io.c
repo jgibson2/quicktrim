@@ -15,8 +15,8 @@ int writeRecord(struct fqrec* rec, FILE* file)
     }
 
     //write name
-    size_t written = fwrite(rec->name, sizeof(char), rec->nameLength, file);
-    if(written != rec->nameLength)
+    size_t written = fwrite(rec->name, sizeof(char), rec->nameLength - 1, file);
+    if(written != rec->nameLength - 1)
     {
         return 1;
     }
@@ -165,6 +165,8 @@ int getNextRecord(struct fqfiledata* data, struct fqrec* rec)
                 case 4:
                     qual_end_offset = i;
                     brk = 1;
+                    break;
+                default:
                     break;
             }
         }

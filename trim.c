@@ -4,7 +4,7 @@
 
 //TODO: Possibly implement average quality over window?
 
-#include "fastqrec.h"
+#include "trim.h"
 
 int trim_se(struct fqrec* rec, unsigned int qual_cutoff, unsigned int length_cutoff, unsigned int in_a_row, unsigned int phred)
 /*
@@ -57,48 +57,54 @@ int trim_pe(struct fqrec* rec1, struct fqrec* rec2, unsigned int qual_cutoff, un
     {
         #pragma omp section
         {
-            unsigned int hq_bases_rec1 = 0;
-            for (unsigned int i = rec1->seqLength - 1; i > 0; i--) {
-                if (rec1->seqLength < length_cutoff) {
-                    rec1->seqLength = 0;
-                    break;
-                }
-                if (rec1->seqAndQualBuf[i + rec1->offset] - phred > qual_cutoff) {
-                    if (hq_bases_rec1 >= in_a_row) {
-                        rec1->seqLength += in_a_row;
-                        break;
-                    }
-                    hq_bases_rec1++;
-                } else if (hq_bases_rec1 > 0) {
-                    hq_bases_rec1 = 0;
-                }
-                rec1->seqLength--;
-            }
+            trim_se(rec1, qual_cutoff, length_cutoff, in_a_row, phred);
         }
 
         #pragma omp section
         {
-            unsigned int hq_bases_rec2 = 0;
-            for (unsigned int i = rec2->seqLength - 1; i > 0; i--) {
-                if (rec2->seqLength < length_cutoff) {
-                    rec2->seqLength = 0;
-                    break;
-                }
-                if (rec2->seqAndQualBuf[i + rec2->offset] - phred > qual_cutoff) {
-                    if (hq_bases_rec2 >= in_a_row) {
-                        rec2->seqLength += in_a_row;
-                        break;
-                    }
-                    hq_bases_rec2++;
-                } else if (hq_bases_rec2 > 0) {
-                    hq_bases_rec2 = 0;
-                }
-                rec2->seqLength--;
-            }
+            trim_se(rec2, qual_cutoff, length_cutoff, in_a_row, phred);
         }
     }
     if (rec1->seqLength == 0 || rec2->seqLength == 0) {
         return 1;
     }
     return 0;
+}
+
+int trim_adapter_se(struct fqrec* rec, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore)
+{
+    unsigned int start = get_adapter_start_position(rec->seqAndQualBuf, rec->seqLength, adapter, adapterLength, minOverlap, minScore);
+    if(start == 0)
+    {
+        return 1;
+    }
+    rec->seqLength = start; //modify length to not include adapter
+    return 0;
+}
+
+int trim_adapter_pe(struct fqrec* rec1, struct fqrec* rec2, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore)
+/*
+ *  Paired-end trimming
+ *  Parameters:
+ *      rec1, rec2: records to trim
+ *      qual_cutoff: quality cutoff for bases
+ *      length_cutoff: length cutoff for the read. If the length goes below this number, seqLength drops to 0
+ *      in_a_row: number of high-quality bases in a row to stop filtering
+ *      phred : phred version
+ */
+{
+    int res1, res2;
+    #pragma omp parallel sections
+    {
+        #pragma omp section
+        {
+            res1 = trim_adapter_se(rec1, adapter, adapterLength, minOverlap, minScore);
+        }
+
+        #pragma omp section
+        {
+            res2 = trim_adapter_se(rec2, adapter, adapterLength, minOverlap, minScore);
+        }
+    }
+    return res1 + res2;
 }
