@@ -13,13 +13,14 @@ int main(int argc, char** argv) {
     char* reverse_file;
     char* output_base_name;
     int paired_end = 0;
-    char* adapter;
-    unsigned int adapter_length = 0;
-    unsigned int min_overlap = 10;
-    unsigned int min_score = 8;
-    int trim_adapters = 0;
+    char* adapter_3;
+    char* adapter_5;
+    unsigned int adapter_3_length = 0, adapter_5_length = 0;
+    unsigned int min_3_overlap = 10, min_5_overlap = 10;
+    unsigned int min_3_score = 8, min_5_score = 8;
+    int trim_3_adapters = 0, trim_5_adapters = 0;
 
-    char* optstring = "q:l:r:p:i:o:1:2:a:v:s:";
+    char* optstring = "q:l:r:p:i:o:1:2:a:v:s:A:V:S:";
     int c;
     opterr = 0;
 
@@ -42,10 +43,16 @@ int main(int argc, char** argv) {
                 phred = strtoul(optarg, &end, 10);
                 break;
             case 'v':
-                min_overlap = strtoul(optarg, &end, 10);
+                min_3_overlap = strtoul(optarg, &end, 10);
                 break;
             case 's':
-                min_score = strtoul(optarg, &end, 10);
+                min_3_score = strtoul(optarg, &end, 10);
+                break;
+            case 'V':
+                min_5_overlap = strtoul(optarg, &end, 10);
+                break;
+            case 'S':
+                min_5_score = strtoul(optarg, &end, 10);
                 break;
             case 'i':
                 input_file = (char*)calloc(strlen(optarg) + 10, sizeof(char));
@@ -70,11 +77,18 @@ int main(int argc, char** argv) {
                 paired_end = 1;
                 break;
             case 'a':
-                adapter = (char*)calloc(strlen(optarg) + 10, sizeof(char));
-                strncpy(adapter, optarg, strlen(optarg));
-                adapter[strlen(optarg)] = '\0';
-                trim_adapters = 1;
-                adapter_length = strlen(optarg);
+                adapter_3 = (char*)calloc(strlen(optarg) + 10, sizeof(char));
+                strncpy(adapter_3, optarg, strlen(optarg));
+                adapter_3[strlen(optarg)] = '\0';
+                trim_3_adapters = 1;
+                adapter_3_length = strlen(optarg);
+                break;
+            case 'A':
+                adapter_5 = (char*)calloc(strlen(optarg) + 10, sizeof(char));
+                strncpy(adapter_5, optarg, strlen(optarg));
+                adapter_5[strlen(optarg)] = '\0';
+                trim_5_adapters = 1;
+                adapter_5_length = strlen(optarg);
                 break;
             case '?':
                 if (strchr(optstring, optopt) != NULL)
@@ -93,12 +107,14 @@ int main(int argc, char** argv) {
 
     if(paired_end) {
         paired_end_pipeline(buf_size,  qual_cutoff,  length_cutoff, in_a_row,  phred,  forward_file,  reverse_file,
-                                  output_base_name, adapter, adapter_length, min_overlap, min_score, trim_adapters);
+                                  output_base_name, adapter_3, adapter_3_length, min_3_overlap, min_3_score, 
+                            trim_3_adapters, adapter_5, adapter_5_length, min_5_overlap, min_5_score, trim_5_adapters);
     }
     else
     {
         single_end_pipeline(buf_size,  qual_cutoff,  length_cutoff, in_a_row,  phred,  input_file,
-                            output_base_name, adapter, adapter_length, min_overlap, min_score, trim_adapters);
+                            output_base_name, adapter_3, adapter_3_length, min_3_overlap, min_3_score,
+                            trim_3_adapters, adapter_5, adapter_5_length, min_5_overlap, min_5_score, trim_5_adapters);
     }
 
     return 0;

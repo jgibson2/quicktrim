@@ -6,8 +6,9 @@
 
 void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsigned int length_cutoff,
                          unsigned int in_a_row, unsigned int phred, char* input_file, char* output_base_name,
-                         char* adapter, unsigned int adapter_length, unsigned int min_overlap, unsigned int min_score,
-                         int trim_adapters)
+                         char* adapter_3, unsigned int adapter_3_length, unsigned int min_3_overlap, unsigned int min_3_score,
+                         int trim_3_adapters, char* adapter_5, unsigned int adapter_5_length, unsigned int min_5_overlap, unsigned int min_5_score,
+                         int trim_5_adapters)
 {
     struct fqfiledata data;
     int res = init_file_data(buf_size, input_file, &data);
@@ -32,9 +33,13 @@ void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
             printf("Error getting record: %d.\n", err);
             break;
         }
-        if(trim_adapters)
+        if(trim_3_adapters)
         {
-            trim_adapter_se(&rec, adapter, adapter_length, min_overlap, min_score);
+            trim_3_adapter_se(&rec, adapter_3, adapter_3_length, min_3_overlap, min_3_score);
+        }
+        if(trim_5_adapters)
+        {
+            trim_5_adapter_se(&rec, adapter_5, adapter_5_length, min_5_overlap, min_5_score);
         }
         err = trim_se(&rec, qual_cutoff, length_cutoff, in_a_row, phred);
         if(err) {
@@ -56,8 +61,9 @@ void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
 
 void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsigned int length_cutoff,
                          unsigned int in_a_row, unsigned int phred, char* forward_file, char* reverse_file,
-                         char* output_base_name, char* adapter, unsigned int adapter_length, unsigned int min_overlap,
-                         unsigned int min_score, int trim_adapters)
+                         char* output_base_name, char* adapter_3, unsigned int adapter_3_length, unsigned int min_3_overlap, unsigned int min_3_score,
+                         int trim_3_adapters, char* adapter_5, unsigned int adapter_5_length, unsigned int min_5_overlap, unsigned int min_5_score,
+                         int trim_5_adapters)
 {
     char* output_base_name_copy = (char*)calloc(strlen(output_base_name) + 50, sizeof(char));
     strncpy(output_base_name_copy, output_base_name, strlen(output_base_name));
@@ -113,9 +119,13 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
         {
             break;
         }
-        if(trim_adapters)
+        if(trim_3_adapters)
         {
-            trim_adapter_pe(&rec1, &rec2, adapter, adapter_length, min_overlap, min_score);
+            trim_3_adapter_pe(&rec1, &rec2, adapter_3, adapter_3_length, min_3_overlap, min_3_score);
+        }
+        if(trim_5_adapters)
+        {
+            trim_5_adapter_pe(&rec1, &rec2, adapter_5, adapter_5_length, min_5_overlap, min_5_score);
         }
         err = trim_pe(&rec1, &rec2, qual_cutoff, length_cutoff, in_a_row, phred);
         if(err) {

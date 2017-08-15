@@ -18,6 +18,7 @@ struct fqrec
     unsigned int offset;
     unsigned int nameLength;
     unsigned int seqLength;
+    char* originalBuf;
 };
 
 int allocatefqrec(char* bytes, unsigned long name_start_offset, unsigned long name_end_offset,

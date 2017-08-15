@@ -6,8 +6,10 @@
 #define QUICKTRIM_ALIGN_H
 
 #include "mem.h"
+#include <string.h>
 
-#define GAP_PENALTY 4
+#define N 3 //controls size of matrix, N * adapterSize - adapterLength + 1 in one dimension
+#define GAP_PENALTY 3
 #define MISMATCH_PENALTY 2
 #define MATCH_BONUS 1
 
@@ -24,9 +26,13 @@ struct AlignmentMatrix
     unsigned int score;
 };
 
-unsigned int get_adapter_start_position(char* seq, unsigned int seqLength, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int maxErrors);
+unsigned int get_3_adapter_start_position(char* seq, unsigned int seqLength, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int maxErrors);
 
-unsigned int build_alignment_matrix(char* seq, unsigned int seqLength, char* adapter, unsigned int adapterLength, unsigned int minOverlap, struct AlignmentMatrix* mat);
+unsigned int build_end_alignment_matrix(char* seq, unsigned int seqLength, char* adapter, unsigned int adapterLength, unsigned int minOverlap, struct AlignmentMatrix* mat);
+
+unsigned int build_start_alignment_matrix(char* seq, unsigned int seqLength, char* adapter, unsigned int adapterLength, unsigned int minOverlap, struct AlignmentMatrix* mat);
+
+unsigned int get_5_adapter_end_position(char* seq, unsigned int seqLength, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore);
 
 /*
 inline unsigned int check_if_adapter_at_end(char* seq, unsigned int seqLength, char* adapter, unsigned int adapterLength, unsigned int minOverlap);

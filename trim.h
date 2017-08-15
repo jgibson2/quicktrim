@@ -12,8 +12,12 @@ int trim_se(struct fqrec* rec, unsigned int qual_cutoff, unsigned int length_cut
 
 int trim_pe(struct fqrec* rec1, struct fqrec* rec2, unsigned int qual_cutoff, unsigned int length_cutoff, unsigned int in_a_row, unsigned int phred);
 
-int trim_adapter_se(struct fqrec* rec, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore);
+int trim_3_adapter_se(struct fqrec* rec, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore);
 
-int trim_adapter_pe(struct fqrec* rec1, struct fqrec* rec2, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore);
+int trim_3_adapter_pe(struct fqrec* rec1, struct fqrec* rec2, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore);
+
+int trim_5_adapter_se(struct fqrec* rec, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore);
+
+int trim_5_adapter_pe(struct fqrec* rec1, struct fqrec* rec2, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore);
 
 #endif //QUICKTRIM_TRIM_H
