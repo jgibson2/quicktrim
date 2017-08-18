@@ -7,7 +7,9 @@
 #include <stdio.h>
 #include "trim.h"
 
-int trim_se(struct fqrec* rec, unsigned int qual_cutoff, unsigned int length_cutoff, unsigned int in_a_row, unsigned int phred)
+
+int trim_se(struct fqrec *rec, unsigned int qual_cutoff, unsigned int length_cutoff, unsigned int in_a_row,
+            unsigned char phred, unsigned char method)
 /*
  * Single end trimming
  *  Parameters:
@@ -18,32 +20,51 @@ int trim_se(struct fqrec* rec, unsigned int qual_cutoff, unsigned int length_cut
  *      phred : phred version
  */
 {
-    unsigned int hq_bases = 0;
-    for(unsigned int i = rec->seqLength - 1; i > 0; i--)
-    {
-        if(rec->seqLength < length_cutoff)
-        {
-            rec->seqLength = 0;
-            return 1;
-        }
-        if(rec->seqAndQualBuf[i + rec->offset] - phred > qual_cutoff)
-        {
-            if(hq_bases == in_a_row) {
-                rec->seqLength += in_a_row;
-                return 0;
+    if (method == 0) {
+        //algorithm based on minimum cumulative quality score
+        int sum = 0;
+        int min = 0;
+        unsigned int min_position = rec->seqLength - 1;
+        for (unsigned int i = rec->seqLength - 1; i > 0; i--) {
+            if (rec->seqLength < length_cutoff) {
+                rec->seqLength = 0;
+                return 1;
             }
-            hq_bases++;
+            sum += (rec->seqAndQualBuf[i + rec->offset] - phred) - qual_cutoff;
+            if (sum < min) {
+                min_position = i;
+                min = sum;
+            } else if (sum > 0) {
+                break;
+            }
         }
-        else if(hq_bases > 0)
-        {
-            hq_bases = 0;
+        rec->seqLength = min_position;
+        return 0;
+    } else
+        //algorithm based on # of HQ bases in a row
+    {
+        unsigned int hq_bases = 0;
+        for (unsigned int i = rec->seqLength - 1; i > 0; i--) {
+            if (rec->seqLength < length_cutoff) {
+                rec->seqLength = 0;
+                return 1;
+            }
+            if (rec->seqAndQualBuf[i + rec->offset] - phred > qual_cutoff) {
+                if (hq_bases == in_a_row) {
+                    rec->seqLength += in_a_row;
+                    return 0;
+                }
+                hq_bases++;
+            } else if (hq_bases > 0) {
+                hq_bases = 0;
+            }
+            rec->seqLength--;
         }
-        rec->seqLength--;
+        return 2;
     }
-    return 2;
 }
 
-int trim_pe(struct fqrec* rec1, struct fqrec* rec2, unsigned int qual_cutoff, unsigned int length_cutoff, unsigned int in_a_row, unsigned int phred)
+int trim_pe(struct fqrec* rec1, struct fqrec* rec2, unsigned int qual_cutoff, unsigned int length_cutoff, unsigned int in_a_row, unsigned char phred, unsigned char method)
 /*
  *  Paired-end trimming
  *  Parameters:
@@ -58,12 +79,12 @@ int trim_pe(struct fqrec* rec1, struct fqrec* rec2, unsigned int qual_cutoff, un
     {
         #pragma omp section
         {
-            trim_se(rec1, qual_cutoff, length_cutoff, in_a_row, phred);
+            trim_se(rec1, qual_cutoff, length_cutoff, in_a_row, phred, method);
         }
 
         #pragma omp section
         {
-            trim_se(rec2, qual_cutoff, length_cutoff, in_a_row, phred);
+            trim_se(rec2, qual_cutoff, length_cutoff, in_a_row, phred, method);
         }
     }
     if (rec1->seqLength == 0 || rec2->seqLength == 0) {

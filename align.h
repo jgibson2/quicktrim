@@ -8,7 +8,7 @@
 #include "mem.h"
 #include <string.h>
 
-#define N 3 //controls size of matrix, N * adapterSize - adapterLength + 1 in one dimension
+#define N 2 //controls size of matrix, N * adapterSize - adapterLength + 1 in one dimension
 #define GAP_PENALTY 3
 #define MISMATCH_PENALTY 2
 #define MATCH_BONUS 1

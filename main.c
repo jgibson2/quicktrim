@@ -19,14 +19,38 @@ int main(int argc, char** argv) {
     unsigned int min_3_overlap = 10, min_5_overlap = 10;
     unsigned int min_3_score = 8, min_5_score = 8;
     int trim_3_adapters = 0, trim_5_adapters = 0;
+    unsigned int method = 0;
 
-    char* optstring = "q:l:r:p:i:o:1:2:a:v:s:A:V:S:";
+    char* optstring = "q:l:r:p:b:i:o:1:2:a:v:s:A:V:S:mh";
     int c;
     opterr = 0;
 
     while ((c = getopt (argc, argv, optstring)) != -1) {
         char *end;
         switch (c) {
+            case 'h':
+                printf("quicktrim: a short-read trimming application written in C.\n");
+                printf("Options:\n");
+                printf("\to: Output base filename\n");
+                printf("\ti: Single-ended input file\n");
+                printf("\t1: Paired-end input file 1\n");
+                printf("\t2: Paired-end input file 2\n");
+                printf("\ta: 3' adapter\n");
+                printf("\tA: 5' adapter\n");
+                printf("\tq: Set quality cutoff (default 30)\n");
+                printf("\tl: Set length cutoff (default 20)\n");
+                printf("\tr: Set number of high-quality bases in a row for use with fast trimming (default 5)\n");
+                printf("\tp: Phred score base (default 33)\n");
+                printf("\tb: Change buffer size in bytes (default 100000) {NOTE: must be larger than record length / 10}\n");
+                printf("\tv: Minimum 3' adapter overlap (default 10)\n");
+                printf("\ts: Minimum 3' alignment score (default 8)\n");
+                printf("\tV: Minimum 5' adapter overlap (default 10)\n");
+                printf("\tS: Minimum 5' alignment score (default 8)\n");
+                printf("\tm: Switch to faster, but less accurate mode of triming (HQ bases in a row)\n");
+                printf("\th: Print this menu");
+                return 1;
+            case 'm':
+                method = 1;
             case 'b':
                 buf_size = strtoul(optarg, &end, 10);
                 break;
@@ -106,13 +130,13 @@ int main(int argc, char** argv) {
     }
 
     if(paired_end) {
-        paired_end_pipeline(buf_size,  qual_cutoff,  length_cutoff, in_a_row,  phred,  forward_file,  reverse_file,
+        paired_end_pipeline(buf_size,  qual_cutoff,  length_cutoff, in_a_row, phred, method, forward_file,  reverse_file,
                                   output_base_name, adapter_3, adapter_3_length, min_3_overlap, min_3_score, 
                             trim_3_adapters, adapter_5, adapter_5_length, min_5_overlap, min_5_score, trim_5_adapters);
     }
     else
     {
-        single_end_pipeline(buf_size,  qual_cutoff,  length_cutoff, in_a_row,  phred,  input_file,
+        single_end_pipeline(buf_size,  qual_cutoff,  length_cutoff, in_a_row,  phred, method, input_file,
                             output_base_name, adapter_3, adapter_3_length, min_3_overlap, min_3_score,
                             trim_3_adapters, adapter_5, adapter_5_length, min_5_overlap, min_5_score, trim_5_adapters);
     }

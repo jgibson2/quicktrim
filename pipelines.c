@@ -5,7 +5,7 @@
 #include "pipelines.h"
 
 void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsigned int length_cutoff,
-                         unsigned int in_a_row, unsigned int phred, char* input_file, char* output_base_name,
+                         unsigned int in_a_row, unsigned int phred, unsigned int method, char* input_file, char* output_base_name,
                          char* adapter_3, unsigned int adapter_3_length, unsigned int min_3_overlap, unsigned int min_3_score,
                          int trim_3_adapters, char* adapter_5, unsigned int adapter_5_length, unsigned int min_5_overlap, unsigned int min_5_score,
                          int trim_5_adapters)
@@ -41,7 +41,7 @@ void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
         {
             trim_5_adapter_se(&rec, adapter_5, adapter_5_length, min_5_overlap, min_5_score);
         }
-        err = trim_se(&rec, qual_cutoff, length_cutoff, in_a_row, phred);
+        err = trim_se(&rec, qual_cutoff, length_cutoff, in_a_row, phred, method);
         if(err) {
             //printf("Error trimming: %d.\n", err);
             continue;
@@ -60,7 +60,7 @@ void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
 }
 
 void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsigned int length_cutoff,
-                         unsigned int in_a_row, unsigned int phred, char* forward_file, char* reverse_file,
+                         unsigned int in_a_row, unsigned int phred, unsigned int method, char* forward_file, char* reverse_file,
                          char* output_base_name, char* adapter_3, unsigned int adapter_3_length, unsigned int min_3_overlap, unsigned int min_3_score,
                          int trim_3_adapters, char* adapter_5, unsigned int adapter_5_length, unsigned int min_5_overlap, unsigned int min_5_score,
                          int trim_5_adapters)
@@ -127,7 +127,7 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
         {
             trim_5_adapter_pe(&rec1, &rec2, adapter_5, adapter_5_length, min_5_overlap, min_5_score);
         }
-        err = trim_pe(&rec1, &rec2, qual_cutoff, length_cutoff, in_a_row, phred);
+        err = trim_pe(&rec1, &rec2, qual_cutoff, length_cutoff, in_a_row, phred, method);
         if(err) {
             //printf("Error trimming: %d.\n", err);
             continue;
