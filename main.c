@@ -8,13 +8,13 @@
 int main(int argc, char** argv) {
     unsigned long buf_size = 100000;
     unsigned int qual_cutoff = 30, length_cutoff = 20, in_a_row = 5, phred = 33;
-    char* input_file;
-    char* forward_file;
-    char* reverse_file;
-    char* output_base_name;
+    char* input_file = "";
+    char* forward_file = "";
+    char* reverse_file = "";
+    char* output_base_name = "out";
     int paired_end = 0;
-    char* adapter_3;
-    char* adapter_5;
+    char* adapter_3 = "";
+    char* adapter_5 = "";
     unsigned int adapter_3_length = 0, adapter_5_length = 0;
     unsigned int min_3_overlap = 10, min_5_overlap = 10;
     unsigned int min_3_score = 8, min_5_score = 8;
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
             case 'h':
                 printf("quicktrim: a short-read trimming application written in C.\n");
                 printf("Options:\n");
-                printf("\to: Output base filename\n");
+                printf("\to: Output base filename (default out)\n");
                 printf("\ti: Single-ended input file\n");
                 printf("\t1: Paired-end input file 1\n");
                 printf("\t2: Paired-end input file 2\n");

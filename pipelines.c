@@ -24,8 +24,18 @@ void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
     rec.nameLength = 0;
     rec.seqLength = 0;
     rec.offset = 0;
+    allocatefqrec(data.buf, 0,0,0,0,0,0, &rec);
+
 
     int err = 0;
+
+    struct deltas dlt_3; //from align.h
+    dlt_3.delta2 = aligned_malloc(adapter_3_length * sizeof(int), sizeof(int));
+    struct deltas dlt_5;
+    dlt_5.delta2 = aligned_malloc(adapter_5_length * sizeof(int), sizeof(int));
+
+    if(trim_3_adapters) {make_deltas(&dlt_3, adapter_3, adapter_3_length);}
+    if(trim_5_adapters) {make_deltas(&dlt_5, adapter_5, adapter_5_length);}
 
     while(1) {
         err = getNextRecord(&data, &rec);
@@ -35,11 +45,11 @@ void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
         }
         if(trim_3_adapters)
         {
-            trim_3_adapter_se(&rec, adapter_3, adapter_3_length, min_3_overlap, min_3_score);
+            trim_3_adapter_se(&rec, adapter_3, adapter_3_length, min_3_overlap, min_3_score, dlt_3);
         }
         if(trim_5_adapters)
         {
-            trim_5_adapter_se(&rec, adapter_5, adapter_5_length, min_5_overlap, min_5_score);
+            trim_5_adapter_se(&rec, adapter_5, adapter_5_length, min_5_overlap, min_5_score, dlt_5);
         }
         err = trim_se(&rec, qual_cutoff, length_cutoff, in_a_row, phred, method);
         if(err) {
@@ -100,6 +110,15 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
     int err = 0;
     int readerr = 0;
 
+    struct deltas dlt_3; //from align.h
+    dlt_3.delta2 = aligned_malloc(adapter_3_length * sizeof(int), sizeof(int));
+    struct deltas dlt_5;
+    dlt_5.delta2 = aligned_malloc(adapter_5_length * sizeof(int), sizeof(int));
+
+    if(trim_3_adapters) {make_deltas(&dlt_3, adapter_3, adapter_3_length);}
+    if(trim_5_adapters) {make_deltas(&dlt_5, adapter_5, adapter_5_length);}
+
+
     allocatefqrec(forward_data.buf, 0,0,0,0,0,0, &rec1);
     allocatefqrec(reverse_data.buf, 0,0,0,0,0,0, &rec2);
 
@@ -121,11 +140,11 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
         }
         if(trim_3_adapters)
         {
-            trim_3_adapter_pe(&rec1, &rec2, adapter_3, adapter_3_length, min_3_overlap, min_3_score);
+            trim_3_adapter_pe(&rec1, &rec2, adapter_3, adapter_3_length, min_3_overlap, min_3_score, dlt_3);
         }
         if(trim_5_adapters)
         {
-            trim_5_adapter_pe(&rec1, &rec2, adapter_5, adapter_5_length, min_5_overlap, min_5_score);
+            trim_5_adapter_pe(&rec1, &rec2, adapter_5, adapter_5_length, min_5_overlap, min_5_score, dlt_5);
         }
         err = trim_pe(&rec1, &rec2, qual_cutoff, length_cutoff, in_a_row, phred, method);
         if(err) {

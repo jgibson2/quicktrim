@@ -4,10 +4,10 @@ Short Read trimming application written in C.
 This application was created in an attempt to speed up the process of adapter trimming in Illumina and other types of short reads. Typically, the process of trimming is unnecessarily time-consuming, oftentimes taking up to or longer than the actual alignment step. Although there are many feature-rich tools for adapter trimming, they are generally inefficient due to language choice or other design choices.
 
 ## Design
-quicktrim uses aligned memory to increase reading speed. In addition, quicktrim leverages OpenMP for parallelization, and includes other optimizations for fast reading and trimming of sequences.
+quicktrim uses aligned memory to increase reading speed. In addition, quicktrim leverages OpenMP for parallelization, and includes other optimizations for fast reading and trimming of sequences. quicktrim utilizes a minimal number of dependencies, depending only the C standard library (note: for aligned memory to work, the C standard lib must be C11 or more recent or _POSIX_VERSION must be at least 200112) and OpenMP.
 
 ## Options
-        o: Output base filename
+        o: Output base filename (default out)
         i: Single-ended input file
         1: Paired-end input file 1
         2: Paired-end input file 2

@@ -140,8 +140,8 @@ int getNextRecord(struct fqfiledata* data, struct fqrec* rec)
     //go through and mark offsets
     char line = 1; char brk = 0; char c = 0;
     unsigned long name_start_offset = data->current_offset; unsigned long name_end_offset;
-    unsigned long seq_start_offset; unsigned long seq_end_offset;
-    unsigned long qual_start_offset; unsigned long qual_end_offset;
+    unsigned long seq_start_offset = 0; unsigned long seq_end_offset = 0;
+    unsigned long qual_start_offset = 0; unsigned long qual_end_offset = 0;
     for(unsigned long i = data->current_offset; i < data->current_size; i++)
     {
         c = data->buf[i];

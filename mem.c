@@ -4,13 +4,18 @@
 
 #include "mem.h"
 
-void* aligned_malloc(size_t size, size_t align) {
+void* aligned_malloc(size_t size, size_t align)
+/*
+ * Allocates aligned memory of size to align
+ */
+{
     void *result;
 #ifdef __INTEL_COMPILER
     result = _mm_alloc(size, align);
 #elif _MSC_VER
     result = _aligned_malloc(size, align);
-#elif __STDC_VERSION__ >= 201112L
+//#elif __STDC_VERSION__ >= 201112L
+#elif _ISOC11_SOURCE
     result = aligned_alloc(align, size);
 #elif _POSIX_VERSION >= 200112L
     if(posix_memalign(&result, align, size))
