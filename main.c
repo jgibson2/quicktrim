@@ -6,8 +6,9 @@
 #include "pipelines.h"
 
 int main(int argc, char** argv) {
-    unsigned long buf_size = 100000;
-    unsigned int qual_cutoff = 30, length_cutoff = 20, in_a_row = 5, phred = 33;
+    unsigned long buf_size = 1000000;
+    unsigned char qual_cutoff = 30, phred = 33;
+    unsigned int length_cutoff = 20, in_a_row = 5;
     char* input_file = "";
     char* forward_file = "";
     char* reverse_file = "";
@@ -15,13 +16,16 @@ int main(int argc, char** argv) {
     int paired_end = 0;
     char* adapter_3 = "";
     char* adapter_5 = "";
-    unsigned int adapter_3_length = 0, adapter_5_length = 0;
+    char* adapter_rev_3 = "";
+    char* adapter_rev_5 = "";
+    unsigned int adapter_3_length = 0, adapter_5_length = 0, adapter_rev_3_length = 0, adapter_rev_5_length = 0;
     unsigned int min_3_overlap = 10, min_5_overlap = 10;
     unsigned int min_3_score = 8, min_5_score = 8;
     int trim_3_adapters = 0, trim_5_adapters = 0;
+    int use_3_rev_adapters = 0, use_5_rev_adapters = 0;
     unsigned int method = 0;
 
-    char* optstring = "q:l:r:p:b:i:o:1:2:a:v:s:A:V:S:mh";
+    char* optstring = "q:l:r:p:z:i:o:1:2:a:b:v:s:A:B:V:S:mh";
     int c;
     opterr = 0;
 
@@ -35,13 +39,15 @@ int main(int argc, char** argv) {
                 printf("\ti: Single-ended input file\n");
                 printf("\t1: Paired-end input file 1\n");
                 printf("\t2: Paired-end input file 2\n");
-                printf("\ta: 3' adapter\n");
-                printf("\tA: 5' adapter\n");
+                printf("\ta: 3' fwd adapter\n");
+                printf("\tA: 5' fwd adapter\n");
+                printf("\ta: 3' rev adapter\n");
+                printf("\tA: 5' rev adapter\n");
                 printf("\tq: Set quality cutoff (default 30)\n");
                 printf("\tl: Set length cutoff (default 20)\n");
                 printf("\tr: Set number of high-quality bases in a row for use with fast trimming (default 5)\n");
                 printf("\tp: Phred score base (default 33)\n");
-                printf("\tb: Change buffer size in bytes (default 100000) {NOTE: must be larger than record length / 10}\n");
+                printf("\tb: Change buffer size in bytes (default 1000000) {NOTE: must be larger than record length / 10}\n");
                 printf("\tv: Minimum 3' adapter overlap (default 10)\n");
                 printf("\ts: Minimum 3' alignment score (default 8)\n");
                 printf("\tV: Minimum 5' adapter overlap (default 10)\n");
@@ -51,11 +57,11 @@ int main(int argc, char** argv) {
                 return 1;
             case 'm':
                 method = 1;
-            case 'b':
+            case 'z':
                 buf_size = strtoul(optarg, &end, 10);
                 break;
             case 'q':
-                qual_cutoff = strtoul(optarg, &end, 10);
+                qual_cutoff = (char)strtoul(optarg, &end, 10);
                 break;
             case 'l':
                 length_cutoff = strtoul(optarg, &end, 10);
@@ -64,7 +70,7 @@ int main(int argc, char** argv) {
                 in_a_row = strtoul(optarg, &end, 10);
                 break;
             case 'p':
-                phred = strtoul(optarg, &end, 10);
+                phred = (char)strtoul(optarg, &end, 10);
                 break;
             case 'v':
                 min_3_overlap = strtoul(optarg, &end, 10);
@@ -114,6 +120,22 @@ int main(int argc, char** argv) {
                 trim_5_adapters = 1;
                 adapter_5_length = strlen(optarg);
                 break;
+            case 'b':
+                adapter_rev_3 = (char*)calloc(strlen(optarg) + 10, sizeof(char));
+                strncpy(adapter_rev_3, optarg, strlen(optarg));
+                adapter_rev_3[strlen(optarg)] = '\0';
+                trim_3_adapters = 1;
+                use_3_rev_adapters = 1;
+                adapter_rev_3_length = strlen(optarg);
+                break;
+            case 'B':
+                adapter_rev_5 = (char*)calloc(strlen(optarg) + 10, sizeof(char));
+                strncpy(adapter_rev_5, optarg, strlen(optarg));
+                adapter_rev_5[strlen(optarg)] = '\0';
+                trim_5_adapters = 1;
+                use_5_rev_adapters = 1;
+                adapter_rev_5_length = strlen(optarg);
+                break;
             case '?':
                 if (strchr(optstring, optopt) != NULL)
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
@@ -132,7 +154,8 @@ int main(int argc, char** argv) {
     if(paired_end) {
         paired_end_pipeline(buf_size,  qual_cutoff,  length_cutoff, in_a_row, phred, method, forward_file,  reverse_file,
                                   output_base_name, adapter_3, adapter_3_length, min_3_overlap, min_3_score, 
-                            trim_3_adapters, adapter_5, adapter_5_length, min_5_overlap, min_5_score, trim_5_adapters);
+                            trim_3_adapters, adapter_5, adapter_5_length, min_5_overlap, min_5_score, trim_5_adapters, adapter_rev_5,
+                            adapter_rev_5_length, use_5_rev_adapters, adapter_rev_3, adapter_rev_3_length, use_3_rev_adapters);
     }
     else
     {

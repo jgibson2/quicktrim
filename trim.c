@@ -162,3 +162,51 @@ int trim_5_adapter_pe(struct fqrec* rec1, struct fqrec* rec2, char* adapter, uns
     }
     return res1 + res2;
 }
+
+
+int trim_rev_5_adapter_pe(struct fqrec* rec1, struct fqrec* rec2, char* adapter, unsigned int adapterLength, char* adapter_rev, unsigned int adapter_revLength, unsigned int minOverlap, unsigned int minScore, struct deltas dlt, struct deltas dlt_rev)
+/*
+ *  Paired-end trimming
+ *  Parameters:
+ *
+ */
+{
+    int res1, res2;
+#pragma omp parallel sections
+    {
+#pragma omp section
+        {
+            res1 = trim_5_adapter_se(rec1, adapter, adapterLength, minOverlap, minScore, dlt);
+        }
+
+#pragma omp section
+        {
+            res2 = trim_5_adapter_se(rec2, adapter_rev, adapter_revLength, minOverlap, minScore, dlt_rev);
+        }
+    }
+    return res1 + res2;
+}
+
+int trim_rev_3_adapter_pe(struct fqrec* rec1, struct fqrec* rec2, char* adapter, unsigned int adapterLength, char* adapter_rev, unsigned int adapter_revLength, unsigned int minOverlap, unsigned int minScore, struct deltas dlt, struct deltas dlt_rev)
+/*
+ *  Paired-end trimming
+ *  Parameters:
+ *      most self-explanatory
+ *      minScore: minimum alignment score in Smith-Waterman matrix for adapter to be considered found.
+ */
+{
+    int res1, res2;
+#pragma omp parallel sections
+    {
+#pragma omp section
+        {
+            res1 = trim_3_adapter_se(rec1, adapter, adapterLength, minOverlap, minScore, dlt);
+        }
+
+#pragma omp section
+        {
+            res2 = trim_3_adapter_se(rec2, adapter_rev, adapter_revLength, minOverlap, minScore, dlt_rev);
+        }
+    }
+    return res1 + res2;
+}

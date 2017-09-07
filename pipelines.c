@@ -4,8 +4,8 @@
 
 #include "pipelines.h"
 
-void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsigned int length_cutoff,
-                         unsigned int in_a_row, unsigned int phred, unsigned int method, char* input_file, char* output_base_name,
+void single_end_pipeline(unsigned long buf_size, unsigned char qual_cutoff, unsigned int length_cutoff,
+                         unsigned int in_a_row, unsigned char phred, unsigned char method, char* input_file, char* output_base_name,
                          char* adapter_3, unsigned int adapter_3_length, unsigned int min_3_overlap, unsigned int min_3_score,
                          int trim_3_adapters, char* adapter_5, unsigned int adapter_5_length, unsigned int min_5_overlap, unsigned int min_5_score,
                          int trim_5_adapters)
@@ -37,6 +37,13 @@ void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
     if(trim_3_adapters) {make_deltas(&dlt_3, adapter_3, adapter_3_length);}
     if(trim_5_adapters) {make_deltas(&dlt_5, adapter_5, adapter_5_length);}
 
+    printf("Starting run at ");
+    time_t now = time(NULL);
+    printf(ctime(&now));
+    printf("\n");
+
+    unsigned long int num_records = 0;
+
     while(1) {
         err = getNextRecord(&data, &rec);
         if(err) {
@@ -61,19 +68,28 @@ void single_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
             printf("Error writing: %d.\n", err);
             break;
         }
+        num_records += 1;
     }
     printf("Done reading file or error reading.\n");
     fclose(out);
     fclose(data.file);
     freefqrec(&rec);
     printf("Done.");
+
+    printf("Run ended at ");
+    now = time(NULL);
+    printf(ctime(&now));
+    printf("\n");
+
+    printf("Read %lu pairs of reads.", num_records);
 }
 
-void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsigned int length_cutoff,
-                         unsigned int in_a_row, unsigned int phred, unsigned int method, char* forward_file, char* reverse_file,
+void paired_end_pipeline(unsigned long buf_size, unsigned char qual_cutoff, unsigned int length_cutoff,
+                         unsigned int in_a_row, unsigned char phred, unsigned char method, char* forward_file, char* reverse_file,
                          char* output_base_name, char* adapter_3, unsigned int adapter_3_length, unsigned int min_3_overlap, unsigned int min_3_score,
                          int trim_3_adapters, char* adapter_5, unsigned int adapter_5_length, unsigned int min_5_overlap, unsigned int min_5_score,
-                         int trim_5_adapters)
+                         int trim_5_adapters, char* adapter_rev_5, unsigned int adapter_rev_5_length, int use_5_rev_adapters, char* adapter_rev_3,
+                         unsigned int adapter_rev_3_length, int use_3_rev_adapters)
 {
     char* output_base_name_copy = (char*)calloc(strlen(output_base_name) + 50, sizeof(char));
     strncpy(output_base_name_copy, output_base_name, strlen(output_base_name));
@@ -118,10 +134,24 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
     if(trim_3_adapters) {make_deltas(&dlt_3, adapter_3, adapter_3_length);}
     if(trim_5_adapters) {make_deltas(&dlt_5, adapter_5, adapter_5_length);}
 
+    struct deltas dlt_rev_3; //from align.h
+    dlt_rev_3.delta2 = aligned_malloc(adapter_rev_3_length * sizeof(int), sizeof(int));
+    struct deltas dlt_rev_5;
+    dlt_rev_5.delta2 = aligned_malloc(adapter_rev_5_length * sizeof(int), sizeof(int));
+
+    if(trim_3_adapters && use_3_rev_adapters) {make_deltas(&dlt_rev_3, adapter_rev_3, adapter_rev_3_length);}
+    if(trim_5_adapters && use_5_rev_adapters) {make_deltas(&dlt_rev_5, adapter_rev_5, adapter_rev_5_length);}
+
 
     allocatefqrec(forward_data.buf, 0,0,0,0,0,0, &rec1);
     allocatefqrec(reverse_data.buf, 0,0,0,0,0,0, &rec2);
 
+    printf("Starting run at ");
+    time_t now = time(NULL);
+    printf(ctime(&now));
+    printf("\n");
+
+    unsigned long int num_records = 0;
 
     while(1) {
         err = getNextRecord(&forward_data, &rec1);
@@ -140,11 +170,19 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
         }
         if(trim_3_adapters)
         {
-            trim_3_adapter_pe(&rec1, &rec2, adapter_3, adapter_3_length, min_3_overlap, min_3_score, dlt_3);
+            if(use_3_rev_adapters) {
+                trim_rev_3_adapter_pe(&rec1, &rec2, adapter_3, adapter_3_length, adapter_rev_3, adapter_rev_3_length, min_3_overlap, min_3_score, dlt_3, dlt_rev_3);
+            } else {
+                trim_3_adapter_pe(&rec1, &rec2, adapter_3, adapter_3_length, min_3_overlap, min_3_score, dlt_3);
+            }
         }
         if(trim_5_adapters)
         {
-            trim_5_adapter_pe(&rec1, &rec2, adapter_5, adapter_5_length, min_5_overlap, min_5_score, dlt_5);
+            if(use_5_rev_adapters) {
+                trim_rev_5_adapter_pe(&rec1, &rec2, adapter_5, adapter_5_length, adapter_rev_5, adapter_rev_5_length, min_5_overlap, min_5_score, dlt_5, dlt_rev_5);
+            } else {
+                trim_5_adapter_pe(&rec1, &rec2, adapter_5, adapter_5_length, min_5_overlap, min_5_score, dlt_5);
+            }
         }
         err = trim_pe(&rec1, &rec2, qual_cutoff, length_cutoff, in_a_row, phred, method);
         if(err) {
@@ -156,6 +194,7 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
             printf("Error writing: %d.\n", err);
             break;
         }
+        num_records += 1;
     }
     printf("Done reading files or error reading.\n");
     fclose(forward_out);
@@ -164,5 +203,12 @@ void paired_end_pipeline(unsigned long buf_size, unsigned int qual_cutoff, unsig
     fclose(reverse_data.file);
     freefqrec(&rec1);
     freefqrec(&rec2);
-    printf("Done.");
+    printf("Done.\n");
+
+    printf("Run ended at ");
+    now = time(NULL);
+    printf(ctime(&now));
+    printf("\n");
+
+    printf("Read %lu pairs of reads.", num_records);
 }
