@@ -41,8 +41,8 @@ int main(int argc, char** argv) {
                 printf("\t2: Paired-end input file 2\n");
                 printf("\ta: 3' fwd adapter\n");
                 printf("\tA: 5' fwd adapter\n");
-                printf("\ta: 3' rev adapter\n");
-                printf("\tA: 5' rev adapter\n");
+                printf("\tb: 3' rev adapter\n");
+                printf("\tB: 5' rev adapter\n");
                 printf("\tq: Set quality cutoff (default 30)\n");
                 printf("\tl: Set length cutoff (default 20)\n");
                 printf("\tr: Set number of high-quality bases in a row for use with fast trimming (default 5)\n");
