@@ -1,7 +1,7 @@
 //
 // Created by john on 7/29/2017.
 //
-#include <stdio.h>
+//#include <stdio.h>
 #include "align.h"
 
 inline unsigned int check_if_adapter_at_end(char* seq, unsigned int seqLength, char* adapter, unsigned int adapterLength, unsigned int minOverlap, int* delta1, int* delta2);

@@ -23,7 +23,6 @@ void single_end_pipeline(unsigned long buf_size, unsigned char qual_cutoff, unsi
     struct fqrec rec;
     rec.nameLength = 0;
     rec.seqLength = 0;
-    rec.offset = 0;
     allocatefqrec(data.buf, 0,0,0,0,0,0, &rec);
 
 
@@ -73,7 +72,6 @@ void single_end_pipeline(unsigned long buf_size, unsigned char qual_cutoff, unsi
     printf("Done reading file or error reading.\n");
     fclose(out);
     fclose(data.file);
-    freefqrec(&rec);
     printf("Done.");
 
     printf("Run ended at ");
@@ -116,12 +114,10 @@ void paired_end_pipeline(unsigned long buf_size, unsigned char qual_cutoff, unsi
     struct fqrec rec1;
     rec1.nameLength = 0;
     rec1.seqLength = 0;
-    rec1.offset = 0;
 
     struct fqrec rec2;
     rec2.nameLength = 0;
     rec2.seqLength = 0;
-    rec2.offset = 0;
 
     int err = 0;
     int readerr = 0;
@@ -200,9 +196,9 @@ void paired_end_pipeline(unsigned long buf_size, unsigned char qual_cutoff, unsi
     fclose(forward_out);
     fclose(reverse_out);
     fclose(forward_data.file);
+    aligned_free(forward_data.buf);
     fclose(reverse_data.file);
-    freefqrec(&rec1);
-    freefqrec(&rec2);
+    aligned_free(reverse_data.buf);
     printf("Done.\n");
 
     printf("Run ended at ");

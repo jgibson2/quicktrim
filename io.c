@@ -27,7 +27,7 @@ int writeRecord(struct fqrec* rec, FILE* file)
     }
 
     //write seq
-    written = fwrite(rec->seqAndQualBuf, sizeof(char), rec->seqLength, file);
+    written = fwrite(rec->seq, sizeof(char), rec->seqLength, file);
     if(written != rec->seqLength * sizeof(char))
     {
         return 1;
@@ -50,7 +50,7 @@ int writeRecord(struct fqrec* rec, FILE* file)
     }
 
     //write qual
-    written = fwrite(rec->seqAndQualBuf + rec->offset, sizeof(char), rec->seqLength, file);
+    written = fwrite(rec->qual, sizeof(char), rec->seqLength, file);
     if(written != rec->seqLength * sizeof(char))
     {
         return 1;
@@ -139,7 +139,7 @@ int getNextRecord(struct fqfiledata* data, struct fqrec* rec)
 
     //go through and mark offsets
     char line = 1; char brk = 0; char c = 0;
-    unsigned long name_start_offset = data->current_offset; unsigned long name_end_offset;
+    unsigned long name_start_offset = data->current_offset; unsigned long name_end_offset = 0;
     unsigned long seq_start_offset = 0; unsigned long seq_end_offset = 0;
     unsigned long qual_start_offset = 0; unsigned long qual_end_offset = 0;
     for(unsigned long i = data->current_offset; i < data->current_size; i++)

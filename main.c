@@ -6,7 +6,7 @@
 #include "pipelines.h"
 
 int main(int argc, char** argv) {
-    unsigned long buf_size = 1000000;
+    unsigned long buf_size = 10000000;
     unsigned char qual_cutoff = 30, phred = 33;
     unsigned int length_cutoff = 20, in_a_row = 5;
     char* input_file = "";
@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
     unsigned int min_3_score = 8, min_5_score = 8;
     int trim_3_adapters = 0, trim_5_adapters = 0;
     int use_3_rev_adapters = 0, use_5_rev_adapters = 0;
-    unsigned int method = 0;
+    unsigned char method = 0;
 
     char* optstring = "q:l:r:p:z:i:o:1:2:a:b:v:s:A:B:V:S:mh";
     int c;

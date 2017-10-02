@@ -14,11 +14,12 @@
 struct fqrec
 {
     char* name;
-    char* seqAndQualBuf;
-    unsigned int offset;
+    char* seq;
+    char* qual;
     unsigned int nameLength;
     unsigned int seqLength;
-    char* originalBuf;
+    char* originalSeq;
+    char* originalQual;
 };
 
 int allocatefqrec(char* bytes, unsigned long name_start_offset, unsigned long name_end_offset,
@@ -29,6 +30,6 @@ int reallocatefqrec(char* bytes, unsigned long name_start_offset, unsigned long 
     unsigned long seq_start_offset, unsigned long seq_end_offset, unsigned long qual_start_offset,
     unsigned long qual_end_offset, struct fqrec* rec);
 
-int freefqrec(struct fqrec* rec);
+void freefqrec(struct fqrec* rec);
 
 #endif //QUICKTRIM_FASTQREC_H

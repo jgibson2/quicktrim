@@ -27,7 +27,7 @@ int trim_se(struct fqrec *rec, unsigned int qual_cutoff, unsigned int length_cut
                 rec->seqLength = 0;
                 return 1;
             }
-            sum += (rec->seqAndQualBuf[i + rec->offset] - phred) - qual_cutoff;
+            sum += (rec->qual[i] - phred) - qual_cutoff;
             if (sum < min) {
                 min_position = i;
                 min = sum;
@@ -46,7 +46,7 @@ int trim_se(struct fqrec *rec, unsigned int qual_cutoff, unsigned int length_cut
                 rec->seqLength = 0;
                 return 1;
             }
-            if ((unsigned char)rec->seqAndQualBuf[i + rec->offset] > qual_cutoff + phred) { //equivalent form to subtracting phred from left-hand side but protects signed-ness
+            if ((unsigned char)rec->qual[i] > qual_cutoff + phred) { //equivalent form to subtracting phred from left-hand side but protects signed-ness
                 if (hq_bases == in_a_row) {
                     rec->seqLength += in_a_row;
                     return 0;
@@ -92,7 +92,7 @@ int trim_pe(struct fqrec* rec1, struct fqrec* rec2, unsigned int qual_cutoff, un
 
 int trim_3_adapter_se(struct fqrec* rec, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore, struct deltas dlt)
 {
-    unsigned int start = get_3_adapter_start_position(rec->seqAndQualBuf, rec->seqLength, adapter, adapterLength, minOverlap, minScore, dlt);
+    unsigned int start = get_3_adapter_start_position(rec->seq, rec->seqLength, adapter, adapterLength, minOverlap, minScore, dlt);
     if(start == 0)
     {
         return 1;
@@ -127,12 +127,12 @@ int trim_3_adapter_pe(struct fqrec* rec1, struct fqrec* rec2, char* adapter, uns
 
 int trim_5_adapter_se(struct fqrec* rec, char* adapter, unsigned int adapterLength, unsigned int minOverlap, unsigned int minScore, struct deltas dlt)
 {
-    unsigned int end = get_5_adapter_end_position(rec->seqAndQualBuf, rec->seqLength, adapter, adapterLength, minOverlap, minScore, dlt);
+    unsigned int end = get_5_adapter_end_position(rec->seq, rec->seqLength, adapter, adapterLength, minOverlap, minScore, dlt);
     if(end == 0)
     {
         return 1;
     }
-    rec->seqAndQualBuf = rec->seqAndQualBuf + end; //modify seq buf to not include adapter
+    rec->seq = rec->seq + end; //modify seq buf to not include adapter
     rec->seqLength = rec->seqLength - end; //modify seqLength to not include buffer
 
     //printf("%s\t%d\n", rec->name, end);
